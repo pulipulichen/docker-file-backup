@@ -1,0 +1,16 @@
+version: "3"
+services:
+  app:
+    build: .
+    #image: pudding/docker-file-manager:20220517-1450
+    
+    #image: maxime1907/filegator
+    volumes: 
+      - ./data:/data_source:rw
+      - ./data_backup:/data_backup:rw
+      - ./data_archive:/data_archive:rw
+    environment:
+       BACKUP_TO_REMOTE_MINUTE_INTERVAL: "30"
+       #ARCHIVE_SCHEDULE: "0 0 3 * * 0" #每週日3點備份
+       ARCHIVE_SCHEDULE: "*/5 * * * * *" #每5秒備份
+       #RESTORE_MODE: "true"
