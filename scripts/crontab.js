@@ -31,25 +31,40 @@ var CronJob = require('cron').CronJob;
 let cronLock = false
 new CronJob(
 	`* */${BACKUP_TO_REMOTE_MINUTE_INTERVAL} * * * *`,
-	async function() {
-		if (cronLock === true) {
-			return false
-		}
-		cronLock = true
-		console.log('Run backup job...')
-
-		await ShellExec(`rsync -avhz ${sourcePath} ${targetPath}`, false)
-		//await ShellExec(`cd ${sourcePath}; zip ${targetPath}important-backup.zip *`)
-		
-		//await ShellExec(`7z a ${targetPath}important-backup.zip @.`)
-		// process.chdir(sourcePath)
-		// await ShellExec(`zip -9jpr ${targetPath}important-backup.zip *`)
-		
-		cronLock = false
-	},
+	rsyncJob,
 	null,
 	true
 )
+
+async function rsyncJob () {
+	if (cronLock === true) {
+		return false
+	}
+	cronLock = true
+	console.log('Run backup job...')
+
+	await ShellExec(`rsync -avhz ${sourcePath} ${targetPath}`, false)
+	//await ShellExec(`cd ${sourcePath}; zip ${targetPath}important-backup.zip *`)
+	
+	//await ShellExec(`7z a ${targetPath}important-backup.zip @.`)
+	// process.chdir(sourcePath)
+	// await ShellExec(`zip -9jpr ${targetPath}important-backup.zip *`)
+	
+	cronLock = false
+}
+
+async function setupTargetPath() {
+	let files = fs.readdirSync(targetPath)
+	if (files.length > 0) {
+		console.log('Backup path is not empty.', targetPath)
+		return false
+	}
+
+	await rsyncJob()
+	console.log('Backup path is ready.', targetPath)
+}
+
+setupTargetPath()
 
 // ---------------------------
 
@@ -107,16 +122,17 @@ async function createArchive() {
 	if (files.length === 0) {
 		return false
 	}
-	console.log({files})
+	//console.log({files})
 
 	let dateString = dayjs().format('YYYY_MMDD_HHmmss')
 	let filename = `archive-${dateString}.zip`
 
 	//await ShellExec(`7z a ${targetPath}important-backup.zip @.`)
 	process.chdir(targetPath)
-	console.log('Workdir is', targetPath)
-	await ShellExec(`ls -a`, true)
-	await ShellExec(`zip -9jpr /tmp/${filename} *`, false)
+	//console.log('Workdir is', targetPath)
+	//await ShellExec(`ls -a`, true)
+	//return false
+	await ShellExec(`zip -9pr /tmp/${filename} *`, false)
 
 	// 檢查checksum
 	if (!lastChecksum) {
