@@ -103,7 +103,7 @@ ARCHIVE_SCHEDULE.split(' ').length !== 5) {
 
 let ARCHIVE_VERSION_LIMIT = process.env.ARCHIVE_VERSION_LIMIT
 if (!ARCHIVE_VERSION_LIMIT) {
-	ARCHIVE_VERSION_LIMIT = 4
+	ARCHIVE_VERSION_LIMIT = 10
 }
 
 function sleep(ms = 500) {
@@ -114,7 +114,7 @@ const dayjs = require('dayjs')
 
 var checksum = require('checksum')
 
-let lastChecksum
+let lastChecksum = {}
 
 async function createArchive() {
 
@@ -125,40 +125,62 @@ async function createArchive() {
 	//console.log({files})
 
 	let dateString = dayjs().format('YYYY_MMDD_HHmmss')
-	let filename = `archive-${dateString}.zip`
+	
+	let dirname = `/tmp/archive-${dateString}`
 
-	//await ShellExec(`7z a ${targetPath}important-backup.zip @.`)
-	process.chdir(targetPath)
-	//console.log('Workdir is', targetPath)
-	//await ShellExec(`ls -a`, true)
-	//return false
-	await ShellExec(`zip -9pr /tmp/${filename} *`, false)
+	if (fs.existsSync(dirname) === false) {
+		fs.mkdirSync(dirname)
+	}
+	
+	for (let i = 0; i < files.length; i++) {
+		//await ShellExec(`7z a ${targetPath}important-backup.zip @.`)
+		let filename = files[i]
+		process.chdir(path.join(targetPath, filename))
+		//console.log('Workdir is', targetPath)
+		//await ShellExec(`ls -a`, true)
+		//return false
+		let zipPath = `${dirname}/${filename}.zip`
+		await ShellExec(`zip -9pr ${zipPath} *`, false)
 
-	// 檢查checksum
-	if (!lastChecksum) {
-		lastChecksum = await getLastChecksum()
+		// 檢查checksum
+		if (!lastChecksum[filename]) {
+			lastChecksum[filename] = await getLastChecksum(filename)
+		}
+		let currentChecksum = await getChecksum(zipPath)
+		if (lastChecksum[filename] && currentChecksum === lastChecksum[filename]) {
+			console.log(`Same archive ${zipPath}`)
+			await ShellExec(`rm ${zipPath}`, false)
+			continue
+		}
+		lastChecksum[filename] = currentChecksum
+
+		let archiveDir = path.join(archivePath, `archive-${dateString}`)
+		if (fs.existsSync(archiveDir) === false) {
+			fs.mkdirSync(archiveDir)
+		}
+
+		await ShellExec(`mv ${zipPath} ${archiveDir}`, false)
+		console.log(`Create ${archiveDir}/${filename}.zip`)
 	}
-	let currentChecksum = await getChecksum(`/tmp/${filename}`)
-	if (lastChecksum && currentChecksum === lastChecksum) {
-		console.log(`Same archive ${filename}`)
-		await ShellExec(`rm /tmp/${filename}`, false)
-		return false
-	}
-	lastChecksum = currentChecksum
-	await ShellExec(`mv /tmp/${filename} ${archivePath}`, false)
-	console.log(`Create archive ${filename}`)
+		
+	
 	return true
 }
 
-async function getLastChecksum() {
+async function getLastChecksum(filename) {
 	let files = fs.readdirSync(archivePath)
 	if (files.length === 0) {
 		return false
 	}
 
 	let lastFile = files[(files.length - 1)]
+	let zipFile = path.join(archivePath, lastFile, filename + '.zip')
 
-	return await getChecksum(path.join(archivePath, lastFile))
+	if (fs.existsSync(zipFile) === false) {
+		return false
+	}
+
+	return await getChecksum(zipFile)
 }
 
 async function getChecksum (file) {
@@ -173,6 +195,7 @@ async function getChecksum (file) {
 }
 
 const path = require('path')
+const { file } = require('checksum')
 
 async function removeExceededArchives() {
 	let files = fs.readdirSync(archivePath)
