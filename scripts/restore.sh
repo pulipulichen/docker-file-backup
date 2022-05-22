@@ -3,6 +3,8 @@ BACKUP_PATH=/data_backup
 if [ "$(ls $SOURCE_PATH)" ]; then
   echo "$SOURCE_PATH is not empty. Restore is stopped."
 elif [ "$(ls $BACKUP_PATH)" ]; then
+  echo "Restore start."
+  ls -l $BACKUP_PATH
   cp -rf $BACKUP_PATH/* $SOURCE_PATH
   echo "Restore is completed."
 else

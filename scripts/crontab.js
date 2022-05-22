@@ -41,7 +41,7 @@ async function rsyncJob () {
 		return false
 	}
 	cronLock = true
-	console.log('Run backup job...')
+	// console.log('Run backup job...')
 
 	await ShellExec(`rsync -avhz ${sourcePath} ${targetPath}`, false)
 	//await ShellExec(`cd ${sourcePath}; zip ${targetPath}important-backup.zip *`)
