@@ -41,7 +41,11 @@ async function rsyncJob () {
 		return false
 	}
 	cronLock = true
-	// console.log('Run backup job...')
+
+	if (process.env.VERBOSE === 'true') {
+		console.log('Run backup job...')
+	}
+	
 
 	await ShellExec(`rsync -avhz ${sourcePath} ${targetPath}`, false)
 	//await ShellExec(`cd ${sourcePath}; zip ${targetPath}important-backup.zip *`)
@@ -50,6 +54,10 @@ async function rsyncJob () {
 	// process.chdir(sourcePath)
 	// await ShellExec(`zip -9jpr ${targetPath}important-backup.zip *`)
 	
+	if (process.env.VERBOSE === 'true') {
+		await ShellExec(`ls -l ${targetPath}`, true)
+	}
+
 	cronLock = false
 }
 
