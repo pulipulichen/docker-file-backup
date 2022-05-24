@@ -1,7 +1,8 @@
 {
   "scripts": {
     "build-push": "./build-push.sh",
-    "build-up": "docker-compose build; docker-compose up"
+    "build-up": "docker-compose build; docker-compose up",
+    "build-bash": "docker-compose build; docker-compose run app bash"
   },
   "dependencies": {
     "cron": "2.0.0",

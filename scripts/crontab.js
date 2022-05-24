@@ -66,21 +66,23 @@ async function setupTargetPath() {
 	let files = fs.readdirSync(targetPath)
 	if (files.length > 0) {
 		// 確認每個資料夾底下是否有檔案
-		for (let i = 0; i < files.length; i++) {
-			let folder = path.join(targetPath, files[i])
-			let subFiles = fs.readdirSync(folder)
+		// for (let i = 0; i < files.length; i++) {
+		// 	let folder = path.join(targetPath, files[i])
+		// 	let subFiles = fs.readdirSync(folder)
 
-			if (subFiles.length > 0) {
-				console.log(folder)
-				console.log(subFiles)
+		// 	if (subFiles.length > 0) {
+		// 		console.log(folder)
+		// 		console.log(subFiles)
 
-				console.log('Backup path is not empty. Initialization stop.', targetPath)
-				return false
-			}
-			else {
-				break
-			}
-		}
+		// 		console.log('Backup path is not empty. Initialization stop.', targetPath)
+		// 		return false
+		// 	}
+		// 	else {
+		// 		break
+		// 	}
+		// }
+		console.log('Backup path is not empty. Initialization stop.', targetPath)
+		return false
 	}
 
 	await rsyncJob()
