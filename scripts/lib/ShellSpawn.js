@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 
 module.exports = function (cmdArray, stderrHandler, errorHandler) {
-
+  console.log({cmdArray})
   if (typeof(stderrHandler) !== 'function') {
     stderrHandler = function (stderr) {
       console.log(`[STDERR] ${stderr}`);
@@ -21,7 +21,7 @@ module.exports = function (cmdArray, stderrHandler, errorHandler) {
 
     let output = []
     job.stdout.on("data", data => {
-        output.push(data.trim())
+        output.push((data + '').trim())
         console.log(`${data}`);
     });
     
