@@ -13,6 +13,7 @@ if (Number(BACKUP_TO_REMOTE_MINUTE_INTERVAL) >= 60) {
 // console.log({BACKUP_TO_REMOTE_MINUTE_INTERVAL})
 
 const fs = require('fs')
+const path = require('path')
 
 const sourcePath = '/data_source/'
 const targetPath = '/data_backup/'
@@ -64,8 +65,22 @@ async function rsyncJob () {
 async function setupTargetPath() {
 	let files = fs.readdirSync(targetPath)
 	if (files.length > 0) {
-		console.log('Backup path is not empty.', targetPath)
-		return false
+		// 確認每個資料夾底下是否有檔案
+		for (let i = 0; i < files.length; i++) {
+			let folder = path.join(targetPath, files[i])
+			let subFiles = fs.readdirSync(folder)
+
+			if (subFiles.length > 0) {
+				console.log(folder)
+				console.log(subFiles)
+
+				console.log('Backup path is not empty. Initialization stop.', targetPath)
+				return false
+			}
+			else {
+				break
+			}
+		}
 	}
 
 	await rsyncJob()
@@ -78,7 +93,7 @@ setupTargetPath()
 
 let ARCHIVE_SCHEDULE = process.env.ARCHIVE_SCHEDULE
 if (fs.existsSync(archivePath) === false) {
-	console.log('Archive cron is stopped.')
+	console.log('No archivePath: ' + archivePath + '. Archive cron is stopped.')
 	process.exit()
 }
 
@@ -202,7 +217,6 @@ async function getChecksum (file) {
 	})
 }
 
-const path = require('path')
 const { file } = require('checksum')
 
 async function removeExceededArchives() {
