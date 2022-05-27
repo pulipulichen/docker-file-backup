@@ -19,6 +19,15 @@ const sourcePath = '/data_source/'
 const targetPath = '/data_backup/'
 const archivePath = '/data_archive/'
 
+process.on('SIGINT', async function() {
+	console.log("Caught interrupt signal");
+	while (cronLock === true) {
+		await sleep(1000)
+	}
+	process.exit()
+	
+});
+
 if (fs.existsSync(sourcePath) === false || 
 		fs.existsSync(targetPath) === false) {
 	console.log('Backup cron is stopped.')
@@ -44,19 +53,36 @@ async function rsyncJob () {
 	cronLock = true
 
 	if (process.env.VERBOSE === 'true') {
-		console.log('Run backup job...')
+		console.log('Run backup job...', new Date() + '')
 	}
 	
+	let foldersInSource = fs.readdirSync(sourcePath)
+	for (let i = 0; i < foldersInSource.length; i++) {
+		let folderInSource = path.join(sourcePath, foldersInSource[i])
+		let folderInTarget = path.join(targetPath, foldersInSource[i])
 
-	await ShellExec(`rsync -avhz ${sourcePath} ${targetPath}`, false)
+		if (fs.existsSync(folderInTarget) === false) {
+			await ShellExec(`chown root:root /data_backup/`)
+			fs.mkdirSync(folderInTarget, {recursive: true})
+		}
+
+		//await ShellExec(`rsync -avhz ${folderInSource} ${folderInTarget}`, false)
+		await ShellExec(`cp -rf ${folderInSource}/* ${folderInTarget}`, false)
+
+
+		if (process.env.VERBOSE === 'true') {
+			console.log('After sync', folderInTarget)
+			await ShellExec(`ls -l ${folderInTarget}`, true)
+		}
+	}
+	
 	//await ShellExec(`cd ${sourcePath}; zip ${targetPath}important-backup.zip *`)
 	
 	//await ShellExec(`7z a ${targetPath}important-backup.zip @.`)
 	// process.chdir(sourcePath)
 	// await ShellExec(`zip -9jpr ${targetPath}important-backup.zip *`)
-	
 	if (process.env.VERBOSE === 'true') {
-		await ShellExec(`ls -l ${targetPath}`, true)
+		console.log('Backup is finished',  new Date() + '')
 	}
 
 	cronLock = false

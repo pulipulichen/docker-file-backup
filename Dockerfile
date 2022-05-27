@@ -11,4 +11,4 @@ RUN npm i
 COPY scripts /scripts
 #CMD ["filebrowser", "-c", "/config/config.json", "-r", "/data"]
 
-CMD ["bash", "/scripts/init.sh"]
+CMD ["bash", "/scripts/index.sh"]

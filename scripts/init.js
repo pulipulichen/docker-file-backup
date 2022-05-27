@@ -29,8 +29,6 @@ async function main () {
 
   let filesInBackup = fs.readdirSync(BACKUP_PATH)
 
-  return console.log('Skip restore')
-  
   if (filesInBackup.length > 0) {
     
     console.log("Restore start.")
@@ -50,8 +48,8 @@ async function main () {
       }
 
       //await ShellExec(`chmod 777 ${folderInSource}`)
-      await ShellSpawn([`rsync`, '-avhz', folderInBackup + '/', folderInSource + '/'])
-      //await ShellExec(`cp -rf ${folderInBackup}/* ${folderInSource}`)
+      //await ShellSpawn([`rsync`, '-avhz', folderInBackup + '/', folderInSource + '/'])
+      await ShellExec(`cp -rf ${folderInBackup}/* ${folderInSource}`)
 
       await ShellSpawn([`ls`, `-l`, folderInSource])
     }
